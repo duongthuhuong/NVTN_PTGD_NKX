@@ -726,7 +726,6 @@ a{
 }
 
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -894,36 +893,50 @@ a{
 
 
 <script>
-const SUPABASE_URL = 'https://rfrhiexkxztulwauevtf.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_6I8RxZdVpu2Aj3q5qKsAwA_xv3SojaH';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+window.addEventListener("load", () => {
+    const startCounter = () => {
+        const sdk = document.createElement("script");
+        sdk.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+        sdk.async = true;
 
-async function updateVisitCounter(){
-    const countEl = document.getElementById("visitCount");
-    if(!countEl) return;
+        sdk.onload = async () => {
+            const countEl = document.getElementById("visitCount");
+            if(!countEl || !window.supabase) return;
 
-    try{
-        const { error: insertError } = await supabaseClient
-            .from("site_visits")
-            .insert({ page: "nvtn" });
+            try{
+                const client = window.supabase.createClient(
+                    "https://rfrhiexkxztulwauevtf.supabase.co",
+                    "sb_publishable_6I8RxZdVpu2Aj3q5qKsAwA_xv3SojaH"
+                );
 
-        if(insertError) throw insertError;
+                const { error: insertError } = await client
+                    .from("site_visits")
+                    .insert({ page: "nvtn" });
+                if(insertError) throw insertError;
 
-        const { count, error: countError } = await supabaseClient
-            .from("site_visits")
-            .select("*", { count: "exact", head: true })
-            .eq("page", "nvtn");
+                const { count, error: countError } = await client
+                    .from("site_visits")
+                    .select("*", { count: "exact", head: true })
+                    .eq("page", "nvtn");
+                if(countError) throw countError;
 
-        if(countError) throw countError;
+                countEl.textContent =
+                    Number(count || 0).toLocaleString("vi-VN");
+            }catch(err){
+                console.warn("Visit counter chưa sẵn sàng:", err?.message || err);
+                countEl.textContent = "—";
+            }
+        };
 
-        countEl.textContent = Number(count || 0).toLocaleString("vi-VN");
-    }catch(err){
-        console.warn("Visit counter chưa sẵn sàng:", err?.message || err);
-        countEl.textContent = "—";
+        document.head.appendChild(sdk);
+    };
+
+    if("requestIdleCallback" in window){
+        requestIdleCallback(startCounter, { timeout: 1500 });
+    }else{
+        setTimeout(startCounter, 500);
     }
-}
-
-updateVisitCounter();
+});
 </script>
 
 </body>
