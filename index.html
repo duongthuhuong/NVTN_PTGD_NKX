@@ -685,12 +685,61 @@ a{
     }
 }
 
+
+/* =========================================================
+   BỘ ĐẾM LƯỢT TRUY CẬP
+========================================================= */
+.visit-counter{
+    position:absolute;
+    top:28px;
+    right:5.3%;
+    z-index:60;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    padding:8px 12px;
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:999px;
+    background:rgba(3,26,43,.38);
+    backdrop-filter:blur(8px);
+    -webkit-backdrop-filter:blur(8px);
+    color:rgba(255,255,255,.82);
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:.2px;
+}
+.visit-counter strong{
+    color:#fff;
+    font-variant-numeric:tabular-nums;
+}
+.visit-eye{
+    color:var(--pvep-green);
+    font-size:13px;
+}
+@media(max-width:800px){
+    .visit-counter{
+        top:17px;
+        right:5%;
+        padding:6px 9px;
+        font-size:10px;
+    }
+}
+
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
 <div class="app">
+
+    <!-- BỘ ĐẾM LƯỢT TRUY CẬP -->
+    <div class="visit-counter" id="visitCounter" title="Tổng lượt truy cập trang Nhân viên Tài năng">
+        <span class="visit-eye">◉</span>
+        <strong id="visitCount">—</strong>
+        <span>lượt truy cập</span>
+    </div>
+
 
     <!-- ẢNH NỀN -->
 
@@ -842,6 +891,40 @@ a{
     </nav>
 
 </div>
+
+
+<script>
+const SUPABASE_URL = 'https://rfrhiexkxztulwauevtf.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_6I8RxZdVpu2Aj3q5qKsAwA_xv3SojaH';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function updateVisitCounter(){
+    const countEl = document.getElementById("visitCount");
+    if(!countEl) return;
+
+    try{
+        const { error: insertError } = await supabaseClient
+            .from("site_visits")
+            .insert({ page: "nvtn" });
+
+        if(insertError) throw insertError;
+
+        const { count, error: countError } = await supabaseClient
+            .from("site_visits")
+            .select("*", { count: "exact", head: true })
+            .eq("page", "nvtn");
+
+        if(countError) throw countError;
+
+        countEl.textContent = Number(count || 0).toLocaleString("vi-VN");
+    }catch(err){
+        console.warn("Visit counter chưa sẵn sàng:", err?.message || err);
+        countEl.textContent = "—";
+    }
+}
+
+updateVisitCounter();
+</script>
 
 </body>
 </html>
